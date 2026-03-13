@@ -29,10 +29,11 @@ smart-timetable-system/
 │   ├── login.js         ← Authentication
 │   └── timetable.js     ← JS scheduling engine (DSATUR + backtracking) + grid renderer
 ├── backend/
-│   ├── graph.h / graph.c      ← Adjacency-matrix graph structure
+│   ├── graph.h / graph.c         ← Adjacency-matrix graph structure
 │   ├── scheduler.h / scheduler.c ← DSATUR coloring & backtracking
-│   ├── parser.h / parser.c    ← Lightweight JSON parser
-│   └── main.c                 ← Entry point; reads JSON → outputs timetable JSON
+│   ├── parser.h / parser.c       ← Lightweight JSON parser
+│   ├── main.c                    ← Entry point; reads JSON → outputs timetable JSON
+│   └── Makefile                  ← Build automation
 ├── data/
 │   └── sample_data.json  ← Example input (5 teachers, 4 rooms, 5 subjects, 3 batches)
 ├── docs/
@@ -42,40 +43,85 @@ smart-timetable-system/
 
 ---
 
-## Quick Start (Frontend Only — no server needed)
+## How to Run
+
+### Option A — Frontend Only (recommended, no installation needed)
+
+The frontend is pure HTML/CSS/JavaScript and runs directly in any modern browser — **no web server, no build step, no dependencies required**.
+
+#### Step 1 — Clone or download the repository
 
 ```bash
-# Open the login page directly in a browser:
-open frontend/index.html
-# or on Linux:
-xdg-open frontend/index.html
+git clone https://github.com/mohitcodez/smart-timetable-system.git
+cd smart-timetable-system
 ```
 
-Demo credentials: **username** `admin` / **password** `admin123`
+#### Step 2 — Open the login page
+
+| OS | Command |
+|----|---------|
+| **macOS** | `open frontend/index.html` |
+| **Linux** | `xdg-open frontend/index.html` |
+| **Windows** | Double-click `frontend\index.html` in File Explorer, or run `start frontend\index.html` in Command Prompt |
+
+Alternatively, drag `frontend/index.html` into any browser window.
+
+#### Step 3 — Sign in
+
+Use the demo credentials:
+
+| Field    | Value      |
+|----------|------------|
+| Username | `admin`    |
+| Password | `admin123` |
+
+#### Step 4 — Use the dashboard
+
+After login you will see the Admin Dashboard. From the sidebar you can:
+
+1. **Teachers** — add, edit, or delete teachers
+2. **Rooms** — manage classrooms and their capacities
+3. **Subjects** — define subjects and assign teachers
+4. **Student Batches** — manage student groups
+5. **Generate Timetable** — run the DSATUR scheduler in-browser
+6. **View Timetable** — browse the generated schedule, filter by batch or teacher, and export as JSON
 
 ---
 
-## Building the C Backend
+### Option B — C Backend (CLI)
 
-### Requirements
+The C backend reads a JSON input file, runs the same DSATUR algorithm on the server/command line, and prints the timetable as JSON to stdout.
 
-- GCC (any recent version) or Clang
-- POSIX-compatible system (Linux / macOS / WSL)
+#### Prerequisites
 
-### Compile
+- **GCC** (≥ 4.8) or **Clang** — any recent version works
+- **Linux**, **macOS**, or **Windows Subsystem for Linux (WSL)**
+
+> **Windows (native):** Install [MinGW-w64](https://www.mingw-w64.org/) and use `mingw32-make` instead of `make`.
+
+#### Step 1 — Build with Make
 
 ```bash
 cd backend
-gcc -Wall -Wextra -o scheduler main.c graph.c scheduler.c parser.c
+make
 ```
 
-### Run
+This produces the `scheduler` binary in the `backend/` directory.
+
+> **Alternative (no Make):** compile manually with:
+> ```bash
+> gcc -Wall -Wextra -std=c99 -o scheduler main.c graph.c scheduler.c parser.c
+> ```
+
+#### Step 2 — Run with sample data
 
 ```bash
+make run
+# or directly:
 ./scheduler ../data/sample_data.json
 ```
 
-The scheduler outputs a JSON timetable to stdout:
+#### Sample output
 
 ```json
 {
@@ -90,6 +136,20 @@ The scheduler outputs a JSON timetable to stdout:
     }
   ]
 }
+```
+
+#### Step 3 — Use your own data
+
+Copy `data/sample_data.json` to a new file, edit it, and pass it as the first argument:
+
+```bash
+./scheduler /path/to/my_data.json
+```
+
+#### Clean build artifacts
+
+```bash
+make clean
 ```
 
 ---
@@ -112,6 +172,19 @@ The scheduler outputs a JSON timetable to stdout:
   ]
 }
 ```
+
+---
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| Browser shows a blank page or JS errors | Ensure all six files (`index.html`, `dashboard.html`, `style.css`, `app.js`, `login.js`, `timetable.js`) are in the **same folder** and opened from the filesystem (not copied individually). |
+| `open` command not found (Linux) | Use `xdg-open frontend/index.html` or just double-click the file. |
+| `gcc: command not found` | Install GCC: `sudo apt install gcc` (Debian/Ubuntu) or `sudo dnf install gcc` (Fedora/RHEL). |
+| `make: command not found` | Install Make: `sudo apt install make` (Debian/Ubuntu) or `sudo dnf install make` (Fedora/RHEL). |
+| `Error: could not parse input file` | Verify the JSON path is correct and the file is valid JSON. |
+| `Error: scheduling impossible` | Reduce `lectures_per_week` or add more rooms/teachers so the total sessions fit within 40 available slots (5 days × 8 periods). |
 
 ---
 
