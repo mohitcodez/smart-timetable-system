@@ -1,61 +1,164 @@
-# Smart Timetable System
+# Smart Timetable Management System
 
-## Project Overview
-The Smart Timetable System is a project designed to automate the scheduling of classes, exams, and resources in educational institutions. The system leverages advanced algorithms to optimize timetabling processes, making it easier for institutions to manage their academic schedules.
+A **Design and Analysis of Algorithms (DAA)** project that automatically generates
+conflict-free academic timetables using **Graph Coloring** (DSATUR algorithm).
+
+---
 
 ## Features
-- Automated timetable generation
-- User-friendly interface for administrators and students
--Conflict detection and resolution
-- Customizable settings for different types of classes and resources
-- Real-time updates and notifications
 
-## Architecture
-The Smart Timetable System is built using a client-server architecture:
-- **Client side**: The user interface is developed using HTML, CSS, and JavaScript, allowing users to interact with the system easily.
-- **Server side**: The backend is developed using [framework/language], where all the business logic is implemented and data is managed.
+- **Admin Login** — simple session-based authentication
+- **Teacher / Room / Subject / Batch CRUD** — full in-browser management with localStorage persistence
+- **Automatic Timetable Generation** — DSATUR graph coloring with backtracking fallback
+- **Conflict Validation** — guarantees no teacher / room / batch conflicts
+- **Visual Timetable Grid** — filterable by batch or teacher
+- **Export** — download the generated timetable as JSON
+- **C Backend** — standalone CLI tool that reads JSON input and outputs a schedule
 
-## Algorithms
-The system uses several algorithms for generating schedules, including:
-1. **Genetic Algorithm**: Utilizes evolutionary techniques to find optimal solutions for complex scheduling problems.
-2. **Backtracking Algorithm**: An effective way to explore all possible configurations to ensure no conflicts occur.
+---
 
-## Installation
-To install the Smart Timetable System:
-1. Clone the repository:
-   ```
-   git clone https://github.com/mohitcodez/smart-timetable-system.git
-   ```
-2. Navigate into the project directory:
-   ```
-   cd smart-timetable-system
-   ```
-3. Install the required dependencies:
-   ```
-   [installation command]
-   ```
+## Project Structure
 
-## Usage
-To run the project:
-1. Start the server:
-   ```
-   [server start command]
-   ```
-2. Open your browser and navigate to `http://localhost:port` to access the interface.
-
-## File Structure
 ```
 smart-timetable-system/
-├── src/                # Source files
-│   ├── algorithms/     # Scheduling algorithms
-│   ├── api/            # REST API definitions
-│   ├── components/     # Frontend components
-│   └── config/         # Configuration files
-├── tests/              # Unit and integration tests
-├── README.md           # Project documentation
-└── .gitignore          # Git ignore file
+├── frontend/
+│   ├── index.html       ← Login page
+│   ├── dashboard.html   ← Admin dashboard (Teachers / Rooms / Subjects / Batches / Timetable)
+│   ├── style.css        ← Complete stylesheet
+│   ├── app.js           ← CRUD logic, navigation, modal handling
+│   ├── login.js         ← Authentication
+│   └── timetable.js     ← JS scheduling engine (DSATUR + backtracking) + grid renderer
+├── backend/
+│   ├── graph.h / graph.c      ← Adjacency-matrix graph structure
+│   ├── scheduler.h / scheduler.c ← DSATUR coloring & backtracking
+│   ├── parser.h / parser.c    ← Lightweight JSON parser
+│   └── main.c                 ← Entry point; reads JSON → outputs timetable JSON
+├── data/
+│   └── sample_data.json  ← Example input (5 teachers, 4 rooms, 5 subjects, 3 batches)
+├── docs/
+│   └── algorithm.md      ← Detailed algorithm documentation
+└── README.md
 ```
 
 ---
 
-This README serves as a comprehensive guide to the Smart Timetable System project, providing clear documentation for easy usage and understanding.
+## Quick Start (Frontend Only — no server needed)
+
+```bash
+# Open the login page directly in a browser:
+open frontend/index.html
+# or on Linux:
+xdg-open frontend/index.html
+```
+
+Demo credentials: **username** `admin` / **password** `admin123`
+
+---
+
+## Building the C Backend
+
+### Requirements
+
+- GCC (any recent version) or Clang
+- POSIX-compatible system (Linux / macOS / WSL)
+
+### Compile
+
+```bash
+cd backend
+gcc -Wall -Wextra -o scheduler main.c graph.c scheduler.c parser.c
+```
+
+### Run
+
+```bash
+./scheduler ../data/sample_data.json
+```
+
+The scheduler outputs a JSON timetable to stdout:
+
+```json
+{
+  "timetable": [
+    {
+      "day":     "Monday",
+      "slot":    1,
+      "room":    "R101",
+      "subject": "Mathematics",
+      "teacher": "Dr. Sharma",
+      "batch":   "CSE-A"
+    }
+  ]
+}
+```
+
+---
+
+## Input Format (`data/sample_data.json`)
+
+```json
+{
+  "teachers": [
+    { "teacher_id": 0, "teacher_name": "Dr. Sharma", "availability": "all" }
+  ],
+  "rooms": [
+    { "room_id": 0, "room_name": "R101", "capacity": 60 }
+  ],
+  "subjects": [
+    { "subject_id": 0, "subject_name": "Mathematics", "teacher_id": 0, "lectures_per_week": 2 }
+  ],
+  "batches": [
+    { "batch_id": 0, "batch_name": "CSE-A", "student_count": 55 }
+  ]
+}
+```
+
+---
+
+## Scheduling Algorithm
+
+Scheduling is modelled as a **Graph Coloring Problem**:
+
+```
+G = (V, E)
+  V = class sessions (one node per required lecture)
+  E = conflict edges (same teacher OR same batch OR same room)
+  Color = time slot (day × period)
+```
+
+### Algorithms Implemented
+
+| Algorithm | When Used | Complexity |
+|-----------|-----------|-----------|
+| **DSATUR** (Degree of SATURation) | Primary | O(V²) |
+| **Backtracking** | Overflow sessions only | O(k^n) worst-case |
+
+### Constraints Enforced
+
+| Constraint | Mechanism |
+|------------|-----------|
+| Teacher teaches one class at a time | Teacher-conflict edges |
+| Room hosts one class at a time | Room-conflict edges |
+| Batch attends one subject at a time | Batch-conflict edges |
+| Room capacity ≥ batch size | First-fit room assignment |
+| Lectures per week fulfilled | One session per required lecture |
+
+See [docs/algorithm.md](docs/algorithm.md) for full details.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | HTML5, CSS3, Vanilla JavaScript (ES5) |
+| Backend  | C (C99) — standalone CLI |
+| Storage  | Browser `localStorage` (frontend), JSON files (backend) |
+
+No frameworks. No dependencies.
+
+---
+
+## License
+
+MIT
