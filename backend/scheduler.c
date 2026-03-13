@@ -12,18 +12,13 @@ const char *DAY_NAMES[DAYS] = {
 /* ------------------------------------------------------------------ */
 
 /*
- * greedyColoring – DSATUR (Degree of Saturation) algorithm
- * ---------------------------------------------------------
- * At each step choose the UNCOLORED vertex with the highest
- * "saturation" (number of distinct colors already used by its
- * neighbours).  Ties are broken by vertex degree.
+ * greedyColoring - DSATUR algorithm
  *
- * DSATUR is a dynamic greedy that typically achieves the chromatic
- * number for structured graphs like scheduling conflict graphs, making
- * it far superior to static Welsh-Powell ordering.
+ * Picks the uncolored vertex with highest saturation (number of distinct
+ * colors in its neighborhood) at each step, then assigns the smallest
+ * available color (time slot). Ties are broken by vertex degree.
  *
- * Complexity: O(V^2)   (sufficient for V ≤ MAX_NODES = 256)
- * Returns: number of distinct colors (time slots) used.
+ * Returns the number of distinct colors used.
  */
 int greedyColoring(Graph *g)
 {
@@ -92,12 +87,7 @@ int greedyColoring(Graph *g)
 /* Backtracking Scheduler                                              */
 /* ------------------------------------------------------------------ */
 
-/*
- * isSafe
- * ------
- * Returns 1 if assigning color 'c' to node 'node' does not conflict
- * with any already-colored adjacent node.
- */
+/* isSafe - returns 1 if color c is safe to assign to node (no neighbor has it) */
 int isSafe(const Graph *g, int node, int c)
 {
     int j;
@@ -110,13 +100,8 @@ int isSafe(const Graph *g, int node, int c)
 }
 
 /*
- * backtrackingSchedule
- * --------------------
- * Recursive backtracking: assign a valid slot to each node in turn.
- * Returns 1 on success, 0 if no valid assignment exists within
- * TOTAL_SLOTS colors.
- *
- * Worst case: O(k^n) where k=TOTAL_SLOTS, n=V  (exponential – used as fallback only)
+ * backtrackingSchedule - recursive fallback if DSATUR exceeds TOTAL_SLOTS
+ * Returns 1 on success, 0 if no valid schedule exists.
  */
 int backtrackingSchedule(Graph *g, int node)
 {

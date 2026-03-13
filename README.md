@@ -1,164 +1,70 @@
 # Smart Timetable Management System
 
-A **Design and Analysis of Algorithms (DAA)** project that automatically generates
-conflict-free academic timetables using **Graph Coloring** (DSATUR algorithm).
-
----
+A **Design and Analysis of Algorithms (DAA)** project that generates conflict-free academic timetables using graph coloring (DSATUR algorithm).
 
 ## Features
 
-- **Admin Login** — simple session-based authentication
-- **Teacher / Room / Subject / Batch CRUD** — full in-browser management with localStorage persistence
-- **Automatic Timetable Generation** — DSATUR graph coloring with backtracking fallback
-- **Conflict Validation** — guarantees no teacher / room / batch conflicts
-- **Visual Timetable Grid** — filterable by batch or teacher
-- **Export** — download the generated timetable as JSON
-- **C Backend** — standalone CLI tool that reads JSON input and outputs a schedule
-
----
+- Admin login (username: `admin`, password: `admin123`)
+- Manage Teachers, Rooms, Subjects, and Batches
+- Auto-generate timetable using DSATUR graph coloring algorithm
+- Detects and avoids teacher/room/batch scheduling conflicts
+- Filter timetable by batch or teacher
+- Export generated timetable as JSON
+- C backend CLI that does the same thing from the command line
 
 ## Project Structure
 
 ```
 smart-timetable-system/
 ├── frontend/
-│   ├── index.html       ← Login page
-│   ├── dashboard.html   ← Admin dashboard (Teachers / Rooms / Subjects / Batches / Timetable)
-│   ├── style.css        ← Complete stylesheet
-│   ├── app.js           ← CRUD logic, navigation, modal handling
-│   ├── login.js         ← Authentication
-│   └── timetable.js     ← JS scheduling engine (DSATUR + backtracking) + grid renderer
+│   ├── index.html       - Login page
+│   ├── dashboard.html   - Main dashboard
+│   ├── style.css        - Styles
+│   ├── app.js           - CRUD and navigation logic
+│   ├── login.js         - Login handling
+│   └── timetable.js     - Scheduling algorithm + timetable grid
 ├── backend/
-│   ├── graph.h / graph.c      ← Adjacency-matrix graph structure
-│   ├── scheduler.h / scheduler.c ← DSATUR coloring & backtracking
-│   ├── parser.h / parser.c    ← Lightweight JSON parser
-│   └── main.c                 ← Entry point; reads JSON → outputs timetable JSON
+│   ├── main.c           - Entry point
+│   ├── graph.c/h        - Graph structure
+│   ├── scheduler.c/h    - DSATUR coloring and backtracking
+│   └── parser.c/h       - JSON parser
 ├── data/
-│   └── sample_data.json  ← Example input (5 teachers, 4 rooms, 5 subjects, 3 batches)
-├── docs/
-│   └── algorithm.md      ← Detailed algorithm documentation
-└── README.md
+│   └── sample_data.json
+└── docs/
+    └── algorithm.md
 ```
 
----
+## How to Run (Frontend)
 
-## Quick Start (Frontend Only — no server needed)
+Just open `frontend/index.html` in any browser. No server needed.
 
-```bash
-# Open the login page directly in a browser:
-open frontend/index.html
-# or on Linux:
-xdg-open frontend/index.html
 ```
-
-Demo credentials: **username** `admin` / **password** `admin123`
-
----
+Username: admin
+Password: admin123
+```
 
 ## Building the C Backend
 
-### Requirements
-
-- GCC (any recent version) or Clang
-- POSIX-compatible system (Linux / macOS / WSL)
-
-### Compile
-
 ```bash
 cd backend
-gcc -Wall -Wextra -o scheduler main.c graph.c scheduler.c parser.c
-```
-
-### Run
-
-```bash
+gcc -Wall -o scheduler main.c graph.c scheduler.c parser.c
 ./scheduler ../data/sample_data.json
 ```
 
-The scheduler outputs a JSON timetable to stdout:
+Output is a JSON timetable printed to stdout.
 
-```json
-{
-  "timetable": [
-    {
-      "day":     "Monday",
-      "slot":    1,
-      "room":    "R101",
-      "subject": "Mathematics",
-      "teacher": "Dr. Sharma",
-      "batch":   "CSE-A"
-    }
-  ]
-}
-```
+## How it Works
 
----
+The scheduling problem is modelled as graph coloring:
+- Each class session is a node (vertex)
+- Two sessions conflict (edge) if they share a teacher, room, or batch
+- Time slots are colors — goal is to color the graph with minimum colors (slots)
 
-## Input Format (`data/sample_data.json`)
-
-```json
-{
-  "teachers": [
-    { "teacher_id": 0, "teacher_name": "Dr. Sharma", "availability": "all" }
-  ],
-  "rooms": [
-    { "room_id": 0, "room_name": "R101", "capacity": 60 }
-  ],
-  "subjects": [
-    { "subject_id": 0, "subject_name": "Mathematics", "teacher_id": 0, "lectures_per_week": 2 }
-  ],
-  "batches": [
-    { "batch_id": 0, "batch_name": "CSE-A", "student_count": 55 }
-  ]
-}
-```
-
----
-
-## Scheduling Algorithm
-
-Scheduling is modelled as a **Graph Coloring Problem**:
-
-```
-G = (V, E)
-  V = class sessions (one node per required lecture)
-  E = conflict edges (same teacher OR same batch OR same room)
-  Color = time slot (day × period)
-```
-
-### Algorithms Implemented
-
-| Algorithm | When Used | Complexity |
-|-----------|-----------|-----------|
-| **DSATUR** (Degree of SATURation) | Primary | O(V²) |
-| **Backtracking** | Overflow sessions only | O(k^n) worst-case |
-
-### Constraints Enforced
-
-| Constraint | Mechanism |
-|------------|-----------|
-| Teacher teaches one class at a time | Teacher-conflict edges |
-| Room hosts one class at a time | Room-conflict edges |
-| Batch attends one subject at a time | Batch-conflict edges |
-| Room capacity ≥ batch size | First-fit room assignment |
-| Lectures per week fulfilled | One session per required lecture |
-
-See [docs/algorithm.md](docs/algorithm.md) for full details.
-
----
+The DSATUR algorithm picks the most "constrained" uncolored node at each step and assigns the smallest valid color (slot). If more slots are needed than available, it falls back to backtracking.
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Frontend | HTML5, CSS3, Vanilla JavaScript (ES5) |
-| Backend  | C (C99) — standalone CLI |
-| Storage  | Browser `localStorage` (frontend), JSON files (backend) |
+- Frontend: plain HTML, CSS, JavaScript (no frameworks)
+- Backend: C (C99)
+- Storage: localStorage in browser, JSON files for the C backend
 
-No frameworks. No dependencies.
-
----
-
-## License
-
-MIT
