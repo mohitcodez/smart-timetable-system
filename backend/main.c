@@ -1,17 +1,12 @@
 /*
- * main.c  –  Smart Timetable Management System – Backend Entry Point
+ * main.c - Smart Timetable System backend
  *
- * Usage:
- *   ./scheduler <input.json>
+ * Usage: ./scheduler <input.json>
  *
- * Reads the JSON file, builds the conflict graph, runs greedy coloring
- * (falling back to backtracking when needed), and writes the timetable
- * to stdout as JSON.
+ * Reads JSON input, builds a conflict graph, runs DSATUR coloring,
+ * falls back to backtracking if needed, and prints a JSON timetable.
  *
- * Exit codes:
- *   0  – timetable generated successfully
- *   1  – input error
- *   2  – scheduling impossible (too many sessions for available slots)
+ * Exit codes: 0 = success, 1 = input error, 2 = impossible schedule
  */
 
 #include "graph.h"
@@ -23,7 +18,7 @@
 #include <string.h>
 
 /* ------------------------------------------------------------------ */
-/* Helper: build name lookup tables from InputData                     */
+/* Build name lookup tables from InputData                             */
 /* ------------------------------------------------------------------ */
 static void buildNameTables(const InputData *d,
                              const char **subjectNames,

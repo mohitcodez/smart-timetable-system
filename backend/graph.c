@@ -4,13 +4,7 @@
 
 /*
  * buildConflictGraph
- * ------------------
- * For every pair (i, j) of sessions an edge is added when they share:
- *   • the same teacher   (teacher conflict)
- *   • the same batch     (batch conflict)
- *   • the same room      (room conflict)
- *
- * Complexity: O(V²)
+ * Adds an edge between two sessions if they share a teacher, batch, or room.
  */
 void buildConflictGraph(Graph *g)
 {
